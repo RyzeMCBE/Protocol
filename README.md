@@ -1,112 +1,113 @@
-# Protocol
+<div align="center">
 
-[![License](https://img.shields.io/badge/license-apache%202.0-blue.svg)](LICENSE)
-[![Maven Central](https://img.shields.io/maven-central/v/org.allaymc.protocol/bedrock-connection?label=bedrock-connection)](https://central.sonatype.com/artifact/org.allaymc.protocol/bedrock-connection)
+# 🧩 Protocol · RyzeMCBE
 
-A protocol library for Minecraft: Bedrock Edition with multi-version codec support.
+### Biblioteca de protocolos multiversión para Minecraft Bedrock Edition
 
-This project is a hard fork of [CloudburstMC/Protocol](https://github.com/CloudburstMC/Protocol).
+**Codecs, paquetes, serialización y conexión de red para el ecosistema Allay.**
 
-## Modules
+[![Java](https://img.shields.io/badge/Java-JVM-f97316)](https://github.com/RyzeMCBE/Protocol)
+[![Apache 2.0](https://img.shields.io/badge/Licencia-Apache%202.0-blue)](LICENSE)
+[![Estado](https://img.shields.io/badge/Estado-En%20desarrollo-orange)](https://github.com/RyzeMCBE/Protocol)
 
-| Module               | Description                                                                                                          |
-|:---------------------|:---------------------------------------------------------------------------------------------------------------------|
-| `bedrock-codec`      | Bedrock packet definitions, serializers, helpers, and version-specific codec constants such as `Bedrock_v944.CODEC`. |
-| `bedrock-connection` | Netty + RakNet connection support, including peers, sessions, compression, and encryption.                           |
+[Repositorio](https://github.com/RyzeMCBE/Protocol) · [Allay de RyzeMCBE](https://github.com/RyzeMCBE/Allay) · [Organización](https://github.com/RyzeMCBE)
 
-Published artifacts use the `org.allaymc.protocol` group, while the Java packages remain under `org.cloudburstmc.protocol`.
+</div>
 
-## Adding to Your Project
+---
 
-Choose the smallest module that matches your use case:
+## 📖 Descripción
 
-- `org.allaymc.protocol:bedrock-codec` if you only need packet serialization, deserialization, and version-specific codecs.
-- `org.allaymc.protocol:bedrock-connection` if you also need the Netty/RakNet transport and session layer.
+**Protocol** es una biblioteca para el protocolo de **Minecraft: Bedrock Edition**, con codecs y serializadores para diferentes versiones. Esta copia se mantiene en **RyzeMCBE Development Studio** y está basada en la línea de Protocol utilizada por Allay, derivada del proyecto [CloudburstMC/Protocol](https://github.com/CloudburstMC/Protocol).
 
-```kts
-repositories {
-    mavenCentral()
-    maven("https://repo.opencollab.dev/maven-releases/")
-    maven("https://repo.opencollab.dev/maven-snapshots/")
-}
+El propósito de este repositorio es administrar las implementaciones del protocolo por separado del servidor, facilitando actualizaciones, pruebas de regresión y su integración con nuestro fork de Allay.
 
-dependencies {
-    implementation("org.allaymc.protocol:bedrock-connection:<version>")
-}
+## 📦 Módulos
+
+| Módulo | Función |
+| --- | --- |
+| `bedrock-codec` | Definiciones de paquetes, serializers y codecs específicos por versión, como `Bedrock_v944.CODEC`. |
+| `bedrock-connection` | Transporte de red con Netty/RakNet, sesiones, compresión y cifrado. |
+
+Las coordenadas de dependencias de esta línea usan el grupo `org.allaymc.protocol`, aunque los paquetes Java mantienen el espacio de nombres `org.cloudburstmc.protocol`.
+
+## 🔗 Conexión con RyzeMCBE/Allay
+
+**[RyzeMCBE/Allay](https://github.com/RyzeMCBE/Allay)** incorpora este repositorio como submódulo Git en **`protocol-local/`**, fijado a una revisión concreta.
+
+```text
+RyzeMCBE/Allay
+├── api/
+├── server/
+├── settings.gradle.kts
+└── protocol-local/      ← RyzeMCBE/Protocol
+    ├── bedrock-codec/
+    └── bedrock-connection/
 ```
 
-## Supported Versions
+Clona Allay con sus submódulos:
 
-This library supports multiple Bedrock protocol versions. The table below lists the codec class for each supported Minecraft version:
+```bash
+git clone --recurse-submodules https://github.com/RyzeMCBE/Allay.git
+cd Allay
+git submodule sync --recursive
+git submodule update --init --recursive
+```
 
-<details>
-<summary><b>Supported Versions</b></summary>
+**Importante:** un submódulo queda asociado al commit registrado por Allay. Actualizar `main` de Protocol no modifica automáticamente ese commit en Allay; hay que actualizar y guardar el puntero del submódulo.
 
-|        Class         |      Minecraft Version      |
-|:--------------------:|:---------------------------:|
-|     Bedrock_v291     |            1.7.0            |
-|     Bedrock_v313     |            1.8.0            |
-|     Bedrock_v332     |            1.9.0            |
-|     Bedrock_v340     |           1.10.0            |
-|     Bedrock_v354     |           1.11.0            |
-|     Bedrock_v361     |           1.12.0            |
-|     Bedrock_v388     |           1.13.0            |
-|     Bedrock_v389     |      1.14.0 - 1.14.50       |
-|     Bedrock_v390     |           1.14.60           |
-|     Bedrock_v407     |      1.16.0 - 1.16.10       |
-|     Bedrock_v408     |           1.16.20           |
-|     Bedrock_v419     |          1.16.100           |
-|     Bedrock_v422     |     1.16.200 - 1.16.201     |
-|     Bedrock_v428     |          1.16.210           |
-|     Bedrock_v431     |          1.16.220           |
-|     Bedrock_v440     |           1.17.0            |
-|     Bedrock_v448     |      1.17.10 - 1.17.11      |
-|     Bedrock_v465     |      1.17.30 - 1.17.34      |
-|     Bedrock_v471     |      1.17.40 - 1.17.41      |
-|     Bedrock_v475     |           1.18.0            |
-|     Bedrock_v486     |           1.18.10           |
-|     Bedrock_v503     |           1.18.30           |
-|     Bedrock_v527     |           1.19.0            |
-|     Bedrock_v534     |           1.19.10           |
-|     Bedrock_v544     |           1.19.20           |
-|     Bedrock_v545     |           1.19.21           |
-|     Bedrock_v554     |           1.19.30           |
-|     Bedrock_v557     |           1.19.40           |
-|     Bedrock_v560     |           1.19.50           |
-|     Bedrock_v567     |           1.19.60           |
-|     Bedrock_v568     |      1.19.62 - 1.19.63      |
-|     Bedrock_v575     |      1.19.70 - 1.19.73      |
-|     Bedrock_v582     |      1.19.80 - 1.19.83      |
-|     Bedrock_v589     |      1.20.0  - 1.20.1       |
-|     Bedrock_v594     |      1.20.10 - 1.20.15      |
-|     Bedrock_v618     |      1.20.30 - 1.20.32      |
-|     Bedrock_v622     |      1.20.40 - 1.20.41      |
-|     Bedrock_v630     |      1.20.50 - 1.20.51      |
-| Bedrock_v630_NetEase | 1.20.50 - 1.20.51 (NetEase) |
-|     Bedrock_v649     |           1.20.60           |
-|     Bedrock_v662     |           1.20.70           |
-|     Bedrock_v671     |           1.20.80           |
-|     Bedrock_v685     |           1.21.0            |
-|     Bedrock_v686     |           1.21.2            |
-| Bedrock_v686_NetEase |      1.21.2 (NetEase)       |
-|     Bedrock_v712     |           1.21.20           |
-|     Bedrock_v729     |           1.21.30           |
-|     Bedrock_v748     |           1.21.40           |
-|     Bedrock_v766     |           1.21.50           |
-| Bedrock_v766_NetEase |      1.21.50 (NetEase)      |
-|     Bedrock_v776     |           1.21.60           |
-|     Bedrock_v786     |           1.21.70           |
-|     Bedrock_v800     |           1.21.80           |
-|     Bedrock_v818     |      1.21.90 - 1.21.92      |
-|     Bedrock_v819     |      1.21.93 - 1.21.94      |
-| Bedrock_v819_NetEase | 1.21.93 - 1.21.94 (NetEase) |
-|     Bedrock_v827     |     1.21.100 - 1.21.101     |
-|     Bedrock_v844     |     1.21.111 - 1.21.114     |
-|     Bedrock_v859     |     1.21.120 - 1.21.123     |
-|     Bedrock_v860     |          1.21.124           |
-|     Bedrock_v897     |     1.21.130 - 1.21.132     |
-|     Bedrock_v924     |       1.26.0 - 1.26.3       |
-|     Bedrock_v944     |           1.26.10           |
-|     Bedrock_v975     |           1.26.20           |
+## 🛠️ Compilar Protocol
 
-</details>
+Requiere el JDK y las dependencias declaradas por los scripts Gradle del repositorio.
+
+```bash
+git clone https://github.com/RyzeMCBE/Protocol.git
+cd Protocol
+chmod +x gradlew
+./gradlew build --no-daemon
+```
+
+Para Windows, utiliza `gradlew.bat`.
+
+### Integración con Gradle
+
+En el archivo `settings.gradle.kts` de Allay se usa `includeBuild("protocol-local")` y sustitución de dependencias para resolver estos módulos desde el código local:
+
+```text
+org.allaymc.protocol:bedrock-codec
+org.allaymc.protocol:bedrock-connection
+```
+
+No es necesario publicar esos módulos en Maven Central para compilarlos como parte del proyecto compuesto de Allay.
+
+## 🧪 Compatibilidad y pruebas
+
+El repositorio incluye implementaciones para múltiples protocolos históricos y actuales de Bedrock. **Que exista un codec no garantiza por sí mismo que una versión concreta pueda entrar y jugar sin errores**: también deben verificarse los paquetes, el estado de sesión, los inventarios, los bloques y las entidades.
+
+La revisión importada incluye una prueba de regresión sobre el protocolo **v2168**:
+
+```text
+bedrock-codec/src/test/java/org/cloudburstmc/protocol/bedrock/codec/v2168/serializer/ItemStackResponseSerializer_v2168Test.java
+```
+
+Esta prueba es requerida explícitamente por `settings.gradle.kts` de nuestro fork de Allay. La presencia del archivo no reemplaza la ejecución de las pruebas y una compilación exitosa.
+
+## 🤝 Contribuir
+
+Los reportes deben identificar la versión de Minecraft, la versión del protocolo, el paquete/serializador involucrado, los pasos de reproducción y, cuando sea posible, una prueba automatizada. Incluye logs sin credenciales ni datos privados.
+
+## ⚖️ Licencia y atribuciones
+
+El código está sujeto a los términos descritos en [LICENSE](LICENSE) (**Apache 2.0**). Reconocemos a los autores originales de [CloudburstMC/Protocol](https://github.com/CloudburstMC/Protocol) y a quienes han mantenido sus adaptaciones para Allay.
+
+---
+
+<div align="center">
+
+**RyzeMCBE Development Studio** · Ingeniería, compatibilidad y herramientas para Minecraft Bedrock.
+
+[Allay](https://github.com/RyzeMCBE/Allay) · [Protocol](https://github.com/RyzeMCBE/Protocol)
+
+<sub>Proyecto independiente y no afiliado a Mojang Studios ni Microsoft.</sub>
+
+</div>
