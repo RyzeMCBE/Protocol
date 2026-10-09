@@ -1,0 +1,37 @@
+package org.cloudburstmc.protocol.bedrock.packet;
+
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import org.cloudburstmc.protocol.bedrock.data.SimulationType;
+
+/**
+ * An in-progress packet. We currently do not know the use case.
+ */
+@Data
+@EqualsAndHashCode(doNotUseGetters = true, callSuper = false)
+public class SimulationTypePacket implements BedrockPacket {
+
+    /**
+     * The simulation type selected by the client or server.
+     */
+    private SimulationType type;
+
+    @Override
+    public PacketSignal handle(BedrockPacketHandler handler) {
+        return handler.handle(this);
+    }
+
+    @Override
+    public BedrockPacketType getPacketType() {
+        return BedrockPacketType.SIMULATION_TYPE;
+    }
+
+    @Override
+    public SimulationTypePacket clone() {
+        try {
+            return (SimulationTypePacket) super.clone();
+        } catch (CloneNotSupportedException e) {
+            throw new AssertionError(e);
+        }
+    }
+}

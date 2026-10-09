@@ -1,0 +1,43 @@
+package org.cloudburstmc.protocol.bedrock.packet;
+
+import it.unimi.dsi.fastutil.objects.ObjectArrayList;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
+import org.cloudburstmc.protocol.bedrock.data.GameRuleData;
+
+import java.util.List;
+
+/**
+ * Sent by the server to the client to update client-side game rules, such as game rules like the
+ * 'showCoordinates' game rule.
+ */
+@Data
+@EqualsAndHashCode(doNotUseGetters = true)
+@ToString(doNotUseGetters = true)
+public class GameRulesChangedPacket implements BedrockPacket {
+    /**
+     * The game rules that changed with their respective values. Values may be {@code boolean},
+     * {@code int}, or {@code float}. Only changed rules need to be sent, and purely server-side
+     * rules do not necessarily need to be forwarded to the client.
+     */
+    private final List<GameRuleData<?>> gameRules = new ObjectArrayList<>();
+
+    @Override
+    public final PacketSignal handle(BedrockPacketHandler handler) {
+        return handler.handle(this);
+    }
+
+    public BedrockPacketType getPacketType() {
+        return BedrockPacketType.GAME_RULES_CHANGED;
+    }
+
+    @Override
+    public GameRulesChangedPacket clone() {
+        try {
+            return (GameRulesChangedPacket) super.clone();
+        } catch (CloneNotSupportedException e) {
+            throw new AssertionError(e);
+        }
+    }
+}

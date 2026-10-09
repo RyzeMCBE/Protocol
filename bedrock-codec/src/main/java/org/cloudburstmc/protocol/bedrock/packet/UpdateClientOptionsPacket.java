@@ -1,0 +1,45 @@
+package org.cloudburstmc.protocol.bedrock.packet;
+
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
+import org.cloudburstmc.protocol.bedrock.data.GraphicsMode;
+import org.cloudburstmc.protocol.bedrock.util.OptionalBoolean;
+
+/**
+ * Sent by the client when some of the client's options are updated, such as the graphics mode.
+ */
+@Data
+@EqualsAndHashCode(doNotUseGetters = true)
+@ToString(doNotUseGetters = true)
+public class UpdateClientOptionsPacket implements BedrockPacket {
+    /**
+     * The graphics mode currently selected by the client.
+     */
+    private GraphicsMode graphicsMode;
+    /**
+     * Optional profanity-filter preference change reported by the client.
+     *
+     * @since v975
+     */
+    private OptionalBoolean filterProfanityChange = OptionalBoolean.empty();
+
+    @Override
+    public PacketSignal handle(BedrockPacketHandler handler) {
+        return handler.handle(this);
+    }
+
+    @Override
+    public BedrockPacketType getPacketType() {
+        return BedrockPacketType.UPDATE_CLIENT_OPTIONS;
+    }
+
+    @Override
+    public BedrockPacket clone() {
+        try {
+            return (UpdateClientOptionsPacket) super.clone();
+        } catch (CloneNotSupportedException e) {
+            throw new AssertionError(e);
+        }
+    }
+}

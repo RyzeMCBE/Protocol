@@ -1,0 +1,41 @@
+package org.cloudburstmc.protocol.bedrock.packet;
+
+import it.unimi.dsi.fastutil.objects.ObjectArrayList;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
+import org.cloudburstmc.protocol.bedrock.data.inventory.FullContainerName;
+
+import java.util.List;
+
+/**
+ * Sent by the server to trigger a client-side cleanup of the dynamic container registry.
+ */
+@Data
+@EqualsAndHashCode(doNotUseGetters = true)
+@ToString(doNotUseGetters = true)
+public class ContainerRegistryCleanupPacket implements BedrockPacket {
+    /**
+     * The dynamic container entries that should be removed from the client's registry.
+     */
+    private final List<FullContainerName> containers = new ObjectArrayList<>();
+
+    @Override
+    public PacketSignal handle(BedrockPacketHandler handler) {
+        return handler.handle(this);
+    }
+
+    @Override
+    public BedrockPacketType getPacketType() {
+        return BedrockPacketType.CONTAINER_REGISTRY_CLEANUP;
+    }
+
+    @Override
+    public ContainerRegistryCleanupPacket clone() {
+        try {
+            return (ContainerRegistryCleanupPacket) super.clone();
+        } catch (CloneNotSupportedException e) {
+            throw new AssertionError(e);
+        }
+    }
+}

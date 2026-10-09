@@ -1,0 +1,50 @@
+package org.cloudburstmc.protocol.bedrock.packet;
+
+import it.unimi.dsi.fastutil.objects.ObjectArrayList;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
+import org.cloudburstmc.math.vector.Vector3i;
+
+import java.util.List;
+
+/**
+ * Requests specific sub-chunks from the server using a center point.
+ */
+@Data
+@EqualsAndHashCode(doNotUseGetters = true)
+@ToString(doNotUseGetters = true)
+public class SubChunkRequestPacket implements BedrockPacket {
+    /**
+     * The dimension from which sub-chunks are being requested.
+     */
+    private int dimension;
+    /**
+     * The absolute sub-chunk center position used as the base for all requested offsets.
+     */
+    private Vector3i subChunkPosition;
+    /**
+     * The relative sub-chunk offsets to request around {@link #subChunkPosition}.
+     *
+     * @since v486
+     */
+    private List<Vector3i> positionOffsets = new ObjectArrayList<>();
+
+    @Override
+    public final PacketSignal handle(BedrockPacketHandler handler) {
+        return handler.handle(this);
+    }
+
+    public BedrockPacketType getPacketType() {
+        return BedrockPacketType.SUB_CHUNK_REQUEST;
+    }
+
+    @Override
+    public SubChunkRequestPacket clone() {
+        try {
+            return (SubChunkRequestPacket) super.clone();
+        } catch (CloneNotSupportedException e) {
+            throw new AssertionError(e);
+        }
+    }
+}

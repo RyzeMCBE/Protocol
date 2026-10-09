@@ -1,0 +1,39 @@
+package org.cloudburstmc.protocol.bedrock.packet;
+
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
+import org.cloudburstmc.protocol.bedrock.data.SimpleEventType;
+
+/**
+ * Used for enabling or disabling commands and for unlocking world template settings (both unlocking
+ * UI buttons on client and the actual setting on the server). This is fired from the client to the
+ * server and a SetCommandsEnabled is sent back when enabling commands.
+ */
+@Data
+@EqualsAndHashCode(doNotUseGetters = true)
+@ToString(doNotUseGetters = true)
+public class SimpleEventPacket implements BedrockPacket {
+    /**
+     * The simple client event that should be reported to the server.
+     */
+    private SimpleEventType event;
+
+    @Override
+    public final PacketSignal handle(BedrockPacketHandler handler) {
+        return handler.handle(this);
+    }
+
+    public BedrockPacketType getPacketType() {
+        return BedrockPacketType.SIMPLE_EVENT;
+    }
+
+    @Override
+    public SimpleEventPacket clone() {
+        try {
+            return (SimpleEventPacket) super.clone();
+        } catch (CloneNotSupportedException e) {
+            throw new AssertionError(e);
+        }
+    }
+}

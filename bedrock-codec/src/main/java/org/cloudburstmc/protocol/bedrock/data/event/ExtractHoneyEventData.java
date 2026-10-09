@@ -1,0 +1,20 @@
+package org.cloudburstmc.protocol.bedrock.data.event;
+
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
+
+/**
+ * Represents extract honey event data used in the Bedrock protocol.
+ *
+ * @deprecated since v1001
+ */
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
+@Deprecated
+public class ExtractHoneyEventData implements EventData {
+    public static final ExtractHoneyEventData INSTANCE = new ExtractHoneyEventData();
+
+    @Override
+    public EventDataType getType() {
+        return EventDataType.EXTRACT_HONEY;
+    }
+}

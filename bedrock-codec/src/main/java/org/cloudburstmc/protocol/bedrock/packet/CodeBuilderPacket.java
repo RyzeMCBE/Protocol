@@ -1,0 +1,42 @@
+package org.cloudburstmc.protocol.bedrock.packet;
+
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
+
+/**
+ * An Education Edition packet sent by the server to the client to open the URL to a Code Builder
+ * (websocket) server.
+ */
+@Data
+@EqualsAndHashCode(doNotUseGetters = true)
+@ToString(doNotUseGetters = true)
+public class CodeBuilderPacket implements BedrockPacket {
+    /**
+     * The WebSocket URL of the Code Builder server.
+     */
+    private String url;
+    /**
+     * Whether the client should open Code Builder immediately.
+     */
+    private boolean opening;
+
+    @Override
+    public PacketSignal handle(BedrockPacketHandler handler) {
+        return handler.handle(this);
+    }
+
+    @Override
+    public BedrockPacketType getPacketType() {
+        return BedrockPacketType.CODE_BUILDER;
+    }
+
+    @Override
+    public CodeBuilderPacket clone() {
+        try {
+            return (CodeBuilderPacket) super.clone();
+        } catch (CloneNotSupportedException e) {
+            throw new AssertionError(e);
+        }
+    }
+}

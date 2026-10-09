@@ -1,0 +1,61 @@
+package org.cloudburstmc.protocol.bedrock.packet;
+
+import it.unimi.dsi.fastutil.objects.ObjectArrayList;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
+import org.cloudburstmc.protocol.bedrock.data.ScoreInfo;
+
+import java.util.List;
+
+/**
+ * Sent by the server to send the contents of a scoreboard to the player. It may be used to either
+ * add, remove or edit entries on the scoreboard.
+ */
+@Data
+@EqualsAndHashCode(doNotUseGetters = true)
+@ToString(doNotUseGetters = true)
+public class SetScorePacket implements BedrockPacket {
+    /**
+     * The scoreboard operation to apply to {@link #infos}.
+     *
+     * @deprecated since v2168, now uses ScorerType from ScoreInfo
+     */
+    private Action action;
+    /**
+     * The score entries affected by {@link #action}.
+     */
+    private List<ScoreInfo> infos = new ObjectArrayList<>();
+
+    @Override
+    public final PacketSignal handle(BedrockPacketHandler handler) {
+        return handler.handle(this);
+    }
+
+    public BedrockPacketType getPacketType() {
+        return BedrockPacketType.SET_SCORE;
+    }
+
+    /**
+     * @deprecated since v2168
+     */
+    public enum Action {
+        /**
+         * Add new entries or update existing ones.
+         */
+        SET,
+        /**
+         * Remove existing entries.
+         */
+        REMOVE
+    }
+
+    @Override
+    public SetScorePacket clone() {
+        try {
+            return (SetScorePacket) super.clone();
+        } catch (CloneNotSupportedException e) {
+            throw new AssertionError(e);
+        }
+    }
+}
