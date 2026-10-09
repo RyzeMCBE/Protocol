@@ -1,0 +1,96 @@
+name: Importar código fuente de Protocol
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/importar-protocol.yml
+
+permissions:
+  contents: write
+
+concurrency:
+  group: importar-protocol
+  cancel-in-progress: false
+
+jobs:
+  importar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Clonar repositorio
+        uses: actions/checkout@v4
+
+      - name: Validar y descomprimir ZIP sin cambiar los archivos
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import shutil
+          import stat
+          import tempfile
+          import zipfile
+          from pathlib import Path, PurePosixPath
+
+          archivo = Path("Protocol-main.zip")
+          if not archivo.is_file():
+              raise SystemExit("No se encuentra Protocol-main.zip")
+          with zipfile.ZipFile(archivo) as z:
+              malo = z.testzip()
+              if malo:
+                  raise SystemExit(f"Miembro del ZIP corrupto: {malo}")
+              archivos = [i for i in z.infolist() if not i.is_dir()]
+              if not archivos or len(archivos) > 30000:
+                  raise SystemExit(f"Número inesperado de archivos: {len(archivos)}")
+              if sum(i.file_size for i in archivos) > 600_000_000:
+                  raise SystemExit("Contenido descomprimido demasiado grande")
+              rutas = []
+              for i in archivos:
+                  nombre = i.filename.replace("\\", "/")
+                  p = PurePosixPath(nombre)
+                  if p.is_absolute() or ".." in p.parts or ".git" in p.parts or ":" in p.parts[0] or "\x00" in nombre:
+                      raise SystemExit(f"Ruta inválida: {i.filename}")
+                  if stat.S_ISLNK(i.external_attr >> 16):
+                      raise SystemExit(f"No se permite symlink en ZIP: {i.filename}")
+                  if i.file_size > 95_000_000:
+                      raise SystemExit(f"Archivo individual demasiado grande: {i.filename}")
+                  rutas.append(p)
+              prefijos = {p.parts[0] for p in rutas if len(p.parts) > 1}
+              aplanar = len(prefijos) == 1 and all(len(p.parts) > 1 for p in rutas)
+              rutas_finales = [
+                  PurePosixPath(*p.parts[1:]) if aplanar else p for p in rutas
+              ]
+              if len(set(rutas_finales)) != len(rutas_finales):
+                  raise SystemExit("Rutas duplicadas")
+              with tempfile.TemporaryDirectory(prefix="import-protocol-") as d:
+                  tmp = Path(d)
+                  for member, destino_rel in zip(archivos, rutas_finales):
+                      destino = tmp.joinpath(*destino_rel.parts)
+                      destino.parent.mkdir(parents=True, exist_ok=True)
+                      with z.open(member) as src, destino.open("wb") as dst:
+                          shutil.copyfileobj(src, dst)
+                      if member.external_attr >> 16 & 0o111:
+                          destino.chmod(0o755)
+                  for origen in tmp.rglob("*"):
+                      if not origen.is_file():
+                          continue
+                      rel = origen.relative_to(tmp)
+                      # No introducir workflows desde el ZIP usando GITHUB_TOKEN.
+                      if len(rel.parts) >= 3 and rel.parts[:2] == (".github", "workflows"):
+                          rel = Path("imported-workflows") / rel.name
+                      destino = Path.cwd() / rel
+                      if destino.exists():
+                          raise SystemExit(f"Colisión: {destino}")
+                      destino.parent.mkdir(parents=True, exist_ok=True)
+                      shutil.move(str(origen), str(destino))
+              print(f"Extraídos {len(archivos)} archivos")
+          PY
+
+      - name: Confirmar código fuente y quitar ZIP
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git rm -- Protocol-main.zip
+          git add -A
+          git commit -m "chore: extraer código fuente de Protocol y eliminar ZIP"
+          git push origin HEAD:main
