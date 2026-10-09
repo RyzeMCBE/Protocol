@@ -6,6 +6,7 @@ import org.cloudburstmc.protocol.bedrock.codec.BedrockCodec;
 import org.cloudburstmc.protocol.bedrock.codec.BedrockCodecHelper;
 import org.cloudburstmc.protocol.bedrock.codec.v2168.Bedrock_v2168_hotfix4;
 import org.cloudburstmc.protocol.bedrock.codec.v2168.Bedrock_v2168_hotfix5;
+import org.cloudburstmc.protocol.bedrock.codec.v2169.Bedrock_v2169;
 import org.cloudburstmc.protocol.bedrock.data.ScoreInfo;
 import org.cloudburstmc.protocol.bedrock.packet.SetScorePacket;
 import org.cloudburstmc.protocol.bedrock.util.VarInts;
@@ -34,9 +35,21 @@ class SetScoreSerializer_v2168Hotfix4Test {
         var hotfixCodec = Bedrock_v2168_hotfix5.CODEC;
 
         assertEquals(2168, hotfixCodec.getProtocolVersion());
-        assertEquals("1.26.45", hotfixCodec.getMinecraftVersion());
+        // hotfix5 is a compatibility alias for the final v2168 build.
+        // Minecraft 1.26.45 uses its own protocol (2169), not 2168.
+        assertEquals("1.26.44", hotfixCodec.getMinecraftVersion());
         assertSame(SetScoreSerializer_v2168_hotfix4.INSTANCE,
                 hotfixCodec.getPacketDefinition(SetScorePacket.class).serializer());
+    }
+
+    @Test
+    void minecraft12645UsesDedicatedProtocol2169() {
+        var codec = Bedrock_v2169.CODEC;
+
+        assertEquals(2169, codec.getProtocolVersion());
+        assertEquals("1.26.45", codec.getMinecraftVersion());
+        assertSame(SetScoreSerializer_v2168_hotfix4.INSTANCE,
+                codec.getPacketDefinition(SetScorePacket.class).serializer());
     }
 
     @Test

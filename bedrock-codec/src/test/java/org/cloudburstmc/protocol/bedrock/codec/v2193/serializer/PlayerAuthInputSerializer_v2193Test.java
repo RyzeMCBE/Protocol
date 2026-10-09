@@ -27,7 +27,10 @@ class PlayerAuthInputSerializer_v2193Test {
 
             // 2193 removed the v2168 outer marker. Byte 32 is now the input flag count.
             assertEquals(0, buffer.getUnsignedByte(32));
-            assertEquals(92, buffer.readableBytes());
+            // v2168's idle packet takes 96 bytes. v2193 removes the single
+            // outer flag marker and five nested presence markers (96 - 6 = 90),
+            // but retains one Boolean per optional payload.
+            assertEquals(90, buffer.readableBytes());
 
             var decoded = new PlayerAuthInputPacket();
             PlayerAuthInputSerializer_v2193.INSTANCE.deserialize(buffer, helper, decoded);
