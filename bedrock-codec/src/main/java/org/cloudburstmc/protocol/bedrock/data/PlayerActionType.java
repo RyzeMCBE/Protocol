@@ -82,5 +82,10 @@ public enum PlayerActionType {
      * @since v2168
      */
     INTERNAL_UPDATE,
-    COUNT
+    COUNT,
+    /**
+     * Protocol 2193 defines wire ID 0 as Unknown. Kept after COUNT to
+     * preserve legacy ordinal values consumed by older codec serializers.
+     */
+    UNKNOWN
 }
