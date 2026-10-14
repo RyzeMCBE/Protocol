@@ -136,6 +136,9 @@ public final class Bedrock_v2193 extends Bedrock_v2168 {
                     PLAYER_ABILITIES,
                     TEXT_PROCESSING_ORIGINS
             ))
+            .updateSerializer(ChangeDimensionPacket.class, ChangeDimensionSerializer_v2193.INSTANCE)
+            .updateSerializer(PlayerActionPacket.class, PlayerActionSerializer_v2193.INSTANCE)
+            .updateSerializer(ServerboundLoadingScreenPacket.class, ServerboundLoadingScreenSerializer_v2193.INSTANCE)
             .updateSerializer(BossEventPacket.class, BossEventSerializer_v2193.INSTANCE)
             .updateSerializer(CameraPresetsPacket.class, CameraPresetsSerializer_v2193.INSTANCE)
             .updateSerializer(ClientboundAttributeLayerSyncPacket.class, ClientboundAttributeLayerSyncSerializer_v2193.INSTANCE)
