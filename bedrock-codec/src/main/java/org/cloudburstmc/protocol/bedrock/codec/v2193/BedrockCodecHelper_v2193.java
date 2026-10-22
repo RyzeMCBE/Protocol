@@ -74,7 +74,7 @@ public class BedrockCodecHelper_v2193 extends BedrockCodecHelper_v2168Compat {
         VarInts.writeUnsignedInt(buffer, inventorySource.type().id());
 
         switch (inventorySource.type()) {
-            case CONTAINER, NON_IMPLEMENTED_TODO -> {
+            case CONTAINER, NON_IMPLEMENTED_TODO, UNTRACKED_INTERACTION_UI -> {
                 buffer.writeBoolean(true);
                 buffer.writeByte(inventorySource.containerId());
             }
