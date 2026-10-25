@@ -740,7 +740,8 @@ public class BedrockCodecHelper_v2168 extends BedrockCodecHelper_v975 {
         this.writeString(buffer, skin.getFullSkinId());
 
         buffer.writeByte("slim".equalsIgnoreCase(skin.getArmSize()) ? 0 : 1);
-        buffer.writeIntLE(parseSkinColor(skin.getSkinColor()));
+        var skinColor = skin.getColor();
+        buffer.writeIntLE(skinColor == null ? 0 : skinColor.getRGB());
 
         List<PersonaPieceData> pieces = skin.getPersonaPieces();
         VarInts.writeUnsignedInt(buffer, pieces.size());
@@ -1239,11 +1240,4 @@ public class BedrockCodecHelper_v2168 extends BedrockCodecHelper_v975 {
         }
     }
 
-    private static int parseSkinColor(String color) {
-        if (color == null || color.isBlank()) {
-            return 0;
-        }
-        String value = color.charAt(0) == '#' ? color.substring(1) : color;
-        return (int) Long.parseLong(value, 16);
-    }
 }
