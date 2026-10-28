@@ -215,11 +215,11 @@ public interface BedrockCodecHelper {
 
     void writeInventoryActions(ByteBuf buffer, List<InventoryActionData> actions, boolean hasNetworkIds);
 
+    void readExperiments(ByteBuf buffer, List<ExperimentData> experiments);
+
     InventorySource readSource(ByteBuf buffer);
 
     void writeSource(ByteBuf buffer, InventorySource inventorySource);
-
-    void readExperiments(ByteBuf buffer, List<ExperimentData> experiments);
 
     void writeExperiments(ByteBuf buffer, List<ExperimentData> experiments);
 
@@ -274,4 +274,18 @@ public interface BedrockCodecHelper {
     void writeGatheringsConfiguration(ByteBuf byteBuf, BedrockCodecHelper bedrockCodecHelper, GatheringsConfigurationJoinInfo gatheringsConfigurationJoinInfo);
 
     GatheringsConfigurationJoinInfo readGatheringsConfiguration(ByteBuf byteBuf, BedrockCodecHelper bedrockCodecHelper);
+
+    /**
+     * Writes block attachment and pose data. The containing packet encodes the optional presence flag.
+     *
+     * @since v2225
+     */
+    void writePassengerOfBlockArguments(ByteBuf buf, PassengerOfBlockArguments passengerOfBlockArguments);
+
+    /**
+     * Reads block attachment and pose data after the containing packet's presence flag.
+     *
+     * @since v2225
+     */
+    PassengerOfBlockArguments readPassengerOfBlockArguments(ByteBuf buf);
 }
