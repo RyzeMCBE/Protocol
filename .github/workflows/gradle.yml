@@ -1,4 +1,4 @@
-name: Protocol · Compilación
+name: Engine Protocol · Compilación
 
 on:
   push:
@@ -49,7 +49,7 @@ jobs:
         if: success()
         uses: actions/upload-artifact@v7
         with:
-          name: ryzemcbe-protocol-${{ github.sha }}
+          name: engine-protocol-${{ github.sha }}
           path: |
             bedrock-codec/build/libs/*.jar
             bedrock-connection/build/libs/*.jar
