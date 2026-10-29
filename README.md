@@ -1,16 +1,16 @@
 <div align="center">
 
-# 🧩 Protocol · RyzeMCBE
+# Engine Protocol · RyzeMCBE
 
 ### Biblioteca de protocolos multiversión para Minecraft Bedrock Edition
 
-**Codecs, paquetes, serialización y conexión de red para el ecosistema Allay.**
+**Codecs, paquetes, serialización y conexión para Engine y plugins del ecosistema Allay.**
 
 [![Java](https://img.shields.io/badge/Java-JVM-f97316)](https://github.com/RyzeMCBE/Protocol)
 [![Apache 2.0](https://img.shields.io/badge/Licencia-Apache%202.0-blue)](LICENSE)
 [![Estado](https://img.shields.io/badge/Estado-En%20desarrollo-orange)](https://github.com/RyzeMCBE/Protocol)
 
-[Repositorio](https://github.com/RyzeMCBE/Protocol) · [Allay de RyzeMCBE](https://github.com/RyzeMCBE/Allay) · [Organización](https://github.com/RyzeMCBE)
+[Repositorio](https://github.com/RyzeMCBE/Protocol) · [Engine (repositorio actual)](https://github.com/RyzeMCBE/Allay) · [Organización](https://github.com/RyzeMCBE)
 
 </div>
 
@@ -18,7 +18,7 @@
 
 ## 📖 Descripción
 
-**Protocol** es una biblioteca para el protocolo de **Minecraft: Bedrock Edition**, con codecs y serializadores para diferentes versiones. Esta copia se mantiene en **RyzeMCBE Development Studio** y está basada en la línea de Protocol utilizada por Allay, derivada del proyecto [CloudburstMC/Protocol](https://github.com/CloudburstMC/Protocol).
+**Engine Protocol** es una biblioteca para el protocolo de **Minecraft: Bedrock Edition**, con codecs y serializadores para diferentes versiones. Esta copia se mantiene en **RyzeMCBE Development Studio** y está basada en la línea de Protocol utilizada por Allay, derivada del proyecto [CloudburstMC/Protocol](https://github.com/CloudburstMC/Protocol).
 
 El propósito de este repositorio es administrar las implementaciones del protocolo por separado del servidor, facilitando actualizaciones, pruebas de regresión y su integración con nuestro fork de Allay.
 
@@ -29,9 +29,12 @@ El propósito de este repositorio es administrar las implementaciones del protoc
 | `bedrock-codec` | Definiciones de paquetes, serializers y codecs específicos por versión, como `Bedrock_v944.CODEC`. |
 | `bedrock-connection` | Transporte de red con Netty/RakNet, sesiones, compresión y cifrado. |
 
+
+> **Compatibilidad binaria:** el nombre público de este componente es Engine Protocol, pero se conservan los paquetes `org.cloudburstmc.protocol.*`, los módulos `bedrock-codec` y `bedrock-connection`, y el grupo Maven `org.allaymc.protocol`. No se necesita recompilar plugins por este cambio de identidad. La compatibilidad real también depende de la versión del servidor y del protocolo.
+
 Las coordenadas de dependencias de esta línea usan el grupo `org.allaymc.protocol`, aunque los paquetes Java mantienen el espacio de nombres `org.cloudburstmc.protocol`.
 
-## 🔗 Conexión con RyzeMCBE/Allay
+## 🔗 Integración con Engine
 
 **[RyzeMCBE/Allay](https://github.com/RyzeMCBE/Allay)** incorpora este repositorio como submódulo Git en **`protocol-local/`**, fijado a una revisión concreta.
 
