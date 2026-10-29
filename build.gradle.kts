@@ -66,8 +66,8 @@ subprojects {
             url.set("https://github.com/RyzeMCBE/Protocol")
 
             scm {
-                connection.set("scm:git:git://github.com/AllayMC/Protocol.git")
-                developerConnection.set("scm:git:ssh://github.com/AllayMC/Protocol.git")
+                connection.set("scm:git:git://github.com/RyzeMCBE/Protocol.git")
+                developerConnection.set("scm:git:ssh://github.com/RyzeMCBE/Protocol.git")
                 url.set("https://github.com/RyzeMCBE/Protocol")
             }
 
