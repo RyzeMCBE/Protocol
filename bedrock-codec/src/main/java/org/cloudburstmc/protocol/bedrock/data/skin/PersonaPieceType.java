@@ -40,7 +40,11 @@ public enum PersonaPieceType {
     CAPES("capes", "persona_capes"),
     CLASSIC_SKIN("classicskin", "persona_classic_skin"),
     EMOTE("emote", "persona_emote"),
-    UNSUPPORTED("unsupported", "unsupported");
+    UNSUPPORTED("unsupported", "unsupported"),
+    /**
+     * @since v2225
+     */
+    COCO("coco", "persona_coco");
 
     /**
      * The canonical name serialized for this persona piece type.

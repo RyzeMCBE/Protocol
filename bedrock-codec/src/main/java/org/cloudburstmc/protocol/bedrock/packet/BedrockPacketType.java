@@ -255,12 +255,51 @@ public record BedrockPacketType(String name) {
     public static final BedrockPacketType CLIENTBOUND_UPDATE_SOUND_DATA = new BedrockPacketType("CLIENTBOUND_UPDATE_SOUND_DATA");
     public static final BedrockPacketType SEND_PARTY_DESTINATION_COOKIE = new BedrockPacketType("SEND_PARTY_DESTINATION_COOKIE");
     public static final BedrockPacketType PARTY_DESTINATION_COOKIE_RESPONSE = new BedrockPacketType("PARTY_DESTINATION_COOKIE_RESPONSE");
-    public static final BedrockPacketType SET_PLAYER_FURNACE_OPTIONS = new BedrockPacketType("SET_PLAYER_FURNACE_OPTIONS");
-    public static final BedrockPacketType RECORD_STARTED = new BedrockPacketType("RECORD_STARTED");
     public static final BedrockPacketType CONFIRM_SKIN = new BedrockPacketType("CONFIRM_SKIN");
     public static final BedrockPacketType NET_EASE_JSON = new BedrockPacketType("NET_EASE_JSON");
     public static final BedrockPacketType PY_RPC = new BedrockPacketType("PY_RPC");
     public static final BedrockPacketType STORE_BUY_SUCCESS = new BedrockPacketType("STORE_BUY_SUCCESS");
+
+    /**
+     * @since v2192
+     */
+    public static final BedrockPacketType SET_PLAYER_FURNACE_OPTIONS = new BedrockPacketType("SET_PLAYER_FURNACE_OPTIONS");
+    /**
+     * @since v2192
+     */
+    public static final BedrockPacketType RECORD_STARTED = new BedrockPacketType("RECORD_STARTED");
+    /**
+     * @since v2225
+     */
+    public static final BedrockPacketType CLIENTBOUND_MATCHMAKING_STATE = new BedrockPacketType("CLIENTBOUND_MATCHMAKING_STATE");
+    /**
+     * @since v2225
+     */
+    public static final BedrockPacketType CLIENTBOUND_STONECUTTER_SET_RECIPE = new BedrockPacketType("CLIENTBOUND_STONECUTTER_SET_RECIPE");
+    /**
+     * @since v2225
+     */
+    public static final BedrockPacketType SERVERBOUND_MATCHMAKING_CANCEL = new BedrockPacketType("SERVERBOUND_MATCHMAKING_CANCEL");
+    /**
+     * @since v2225
+     */
+    public static final BedrockPacketType SERVERBOUND_STONECUTTER_SET_RECIPE = new BedrockPacketType("SERVERBOUND_STONECUTTER_SET_RECIPE");
+    /**
+     * @since v2225
+     */
+    public static final BedrockPacketType CLIENTBOUND_PLAY_AUDIO_CONTENT = new BedrockPacketType("CLIENTBOUND_PLAY_AUDIO_CONTENT");
+    /**
+     * @since v2225
+     */
+    public static final BedrockPacketType SERVERBOUND_CURSOR_ITEM_DRAG = new BedrockPacketType("SERVERBOUND_CURSOR_ITEM_DRAG");
+    /**
+     * @since v2225
+     */
+    public static final BedrockPacketType SERVERBOUND_REGISTER_AUDIO_CONTENT = new BedrockPacketType("SERVERBOUND_REGISTER_AUDIO_CONTENT");
+    /**
+     * @since v2225
+     */
+    public static final BedrockPacketType SET_PASSENGER_OF_BLOCK = new BedrockPacketType("SET_PASSENGER_OF_BLOCK");
 
     @Override
     public String toString() {

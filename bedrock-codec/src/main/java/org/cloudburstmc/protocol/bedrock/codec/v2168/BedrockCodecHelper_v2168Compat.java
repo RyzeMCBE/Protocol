@@ -62,7 +62,8 @@ public class BedrockCodecHelper_v2168Compat extends BedrockCodecHelper_v2168 {
         VarInts.writeUnsignedInt(buffer, pieces.size());
         for (PersonaPieceData piece : pieces) {
             this.writeString(buffer, piece.id());
-            buffer.writeIntLE(PersonaPieceType.fromName(piece.type()).ordinal());
+            var pieceType = PersonaPieceType.fromName(piece.type());
+            buffer.writeIntLE(pieceType == PersonaPieceType.COCO ? PersonaPieceType.UNSUPPORTED.ordinal() : pieceType.ordinal());
             this.writeUuid(buffer, UUID.fromString(piece.packId()));
             buffer.writeBoolean(piece.isDefault());
             this.writeString(buffer, piece.productId());

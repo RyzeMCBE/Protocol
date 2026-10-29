@@ -1,4 +1,4 @@
-rootProject.name = "protocol"
+rootProject.name = "EngineProtocol"
 
 include(":bedrock-codec")
 include(":bedrock-connection")

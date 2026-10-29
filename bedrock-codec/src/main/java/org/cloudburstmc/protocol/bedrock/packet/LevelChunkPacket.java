@@ -72,6 +72,12 @@ public class LevelChunkPacket extends AbstractReferenceCounted implements Bedroc
      * @since v649
      */
     private int dimension;
+    /**
+     * Whether the chunk payload is a client biome update.
+     *
+     * @since v2225
+     */
+    private boolean clientBiomeUpdate;
 
     @Override
     public final PacketSignal handle(BedrockPacketHandler handler) {

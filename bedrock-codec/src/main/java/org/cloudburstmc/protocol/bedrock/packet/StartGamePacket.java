@@ -11,6 +11,7 @@ import org.cloudburstmc.nbt.NbtList;
 import org.cloudburstmc.nbt.NbtMap;
 import org.cloudburstmc.protocol.bedrock.data.*;
 import org.cloudburstmc.protocol.bedrock.data.definitions.ItemDefinition;
+import org.cloudburstmc.protocol.bedrock.data.editor.EditorLevelMigrationVersion;
 import org.cloudburstmc.protocol.bedrock.util.OptionalBoolean;
 
 import java.util.List;
@@ -525,6 +526,12 @@ public class StartGamePacket implements BedrockPacket {
      * @since v1001
      */
     private boolean allowAnonymousBlockDropsInEditorWorlds;
+    /**
+     * The editor world migration state sent with the level settings.
+     *
+     * @since v2225
+     */
+    private EditorLevelMigrationVersion editorLevelMigrationVersion = EditorLevelMigrationVersion.LEGACY;
 
     @Override
     public final PacketSignal handle(BedrockPacketHandler handler) {

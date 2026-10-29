@@ -9,7 +9,7 @@ import org.cloudburstmc.protocol.bedrock.data.MemoryCategoryCounter;
 import org.cloudburstmc.protocol.bedrock.util.TypeMap;
 import org.cloudburstmc.protocol.bedrock.packet.*;
 
-public final class Bedrock_v2193 extends Bedrock_v2168 {
+public class Bedrock_v2193 extends Bedrock_v2168 {
 
     protected static final TypeMap<MemoryCategoryCounter.Category> MEMORY_CATEGORY_TYPES_2193 =
             TypeMap.builder(MemoryCategoryCounter.Category.class)
@@ -154,6 +154,6 @@ public final class Bedrock_v2193 extends Bedrock_v2168 {
             .registerPacket(RecordStartedPacket::new, RecordStartedSerializer_v2193.INSTANCE, 352, PacketRecipient.CLIENT)
             .build();
 
-    private Bedrock_v2193() {
+    protected Bedrock_v2193() {
     }
 }

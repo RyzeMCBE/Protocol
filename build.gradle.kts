@@ -61,14 +61,14 @@ subprojects {
         )
 
         pom {
-            name.set(project.name)
-            description.set("A protocol library for Minecraft: Bedrock Edition that supports multiple versions.")
-            url.set("https://github.com/AllayMC/Protocol")
+            name.set("Engine Protocol - ${project.name}")
+            description.set("Engine Protocol: multiversion Bedrock network libraries, retaining Cloudburst and Allay compatibility.")
+            url.set("https://github.com/RyzeMCBE/Protocol")
 
             scm {
-                connection.set("scm:git:git://github.com/AllayMC/Protocol.git")
-                developerConnection.set("scm:git:ssh://github.com/AllayMC/Protocol.git")
-                url.set("https://github.com/AllayMC/Protocol")
+                connection.set("scm:git:git://github.com/RyzeMCBE/Protocol.git")
+                developerConnection.set("scm:git:ssh://github.com/RyzeMCBE/Protocol.git")
+                url.set("https://github.com/RyzeMCBE/Protocol")
             }
 
             licenses {
@@ -79,6 +79,11 @@ subprojects {
             }
 
             developers {
+                developer {
+                    name.set("RyzeMCBE Development Studio")
+                    organization.set("RyzeMCBE")
+                    organizationUrl.set("https://github.com/RyzeMCBE")
+                }
                 developer {
                     name.set("CloudburstMC Team")
                     organization.set("CloudburstMC")
