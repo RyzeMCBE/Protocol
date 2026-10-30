@@ -15,8 +15,14 @@ subprojects {
     apply(plugin = rootProject.libs.plugins.lombok.get().pluginId)
     apply(plugin = rootProject.libs.plugins.publish.get().pluginId)
 
-    group = "org.allaymc.protocol"
-    version = rootProject.version
+    // Keep existing development coordinates intact. A Central release is opt-in
+    // and publishes exclusively under the verified RyzeMCBE namespace.
+    val centralRelease = providers.gradleProperty("centralRelease")
+        .map(String::toBoolean).getOrElse(false)
+    group = if (centralRelease) "io.github.ryzemcbe" else "org.allaymc.protocol"
+    version = rootProject.version.toString().let {
+        if (centralRelease) it.removeSuffix("-SNAPSHOT") else it
+    }
 
     tasks {
         withType<JavaCompile>().configureEach {
