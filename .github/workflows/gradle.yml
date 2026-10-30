@@ -45,6 +45,14 @@ jobs:
           chmod +x ./gradlew
           ./gradlew build --no-daemon
 
+      - name: Validar coordenadas de publicación Central (sin subir artefactos)
+        run: |
+          ./gradlew \
+            :bedrock-codec:generatePomFileForMavenPublication \
+            :bedrock-connection:generatePomFileForMavenPublication \
+            -PcentralRelease=true --no-daemon
+          python3 .github/scripts/verify-central-poms.py
+
       - name: Guardar JAR de bedrock-codec y bedrock-connection
         if: success()
         uses: actions/upload-artifact@v7
