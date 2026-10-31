@@ -57,3 +57,22 @@ El responsable revisa el deployment en
 https://central.sonatype.com/publishing y pulsa **Publish** si Sonatype
 lo valida. **No ejecutar todavía**: el cierre de dependencias de Maven
 Central sigue pendiente de verificación.
+
+## Resultado del control real de Maven Central (31-10-2026)
+
+El CI ejecuta `.github/scripts/audit-central-resolution.py` tras generar
+los POM. Las pruebas Java y las coordenadas publicables pasan, pero
+**no publicar todavía**: Maven Central responde HTTP 404 para estas tres
+dependencias directas:
+
+- `org.cloudburstmc.math:immutable:2.0-20220327.162752-1`
+- `com.nukkitx:natives:1.0.3`
+- `org.cloudburstmc.netty:netty-transport-raknet:1.0.0.CR3-20260421.213623-35`
+
+Hay que reemplazarlas por **versiones realmente disponibles en Central**
+solo después de comprobar compatibilidad binaria y ejecutar tests,
+o publicar forks propios y verificables desde código fuente y licencias
+bajo el namespace autorizado `io.github.ryzemcbe`, actualizando las
+coordenadas directas y transitivas. No simplemente eliminar estas
+dependencias del POM: los clientes aún necesitarían esas clases.
+El CI bloquea la publicación mientras haya una dependencia directa ausente.
