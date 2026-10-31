@@ -52,6 +52,10 @@ jobs:
             :bedrock-connection:generatePomFileForMavenPublication \
             -PcentralRelease=true --no-daemon
           python3 .github/scripts/verify-central-poms.py
+          python3 .github/scripts/audit-central-resolution.py \
+            --pending io.github.ryzemcbe:bedrock-codec:1.26.60-R1 \
+            bedrock-codec/build/publications/maven/pom-default.xml \
+            bedrock-connection/build/publications/maven/pom-default.xml
 
       - name: Guardar JAR de bedrock-codec y bedrock-connection
         if: success()
