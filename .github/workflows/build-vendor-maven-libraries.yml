@@ -115,6 +115,34 @@ jobs:
           echo "Protocol compiles using RyzeMCBE-source dependencies."
           echo "This local test does not mean any artifact is available on Maven Central."
 
+      - name: Report first Protocol smoke-test failure root causes
+        if: failure()
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          from xml.etree import ElementTree as ET
+          for filename in sorted(Path('bedrock-codec/build/test-results/test').glob('TEST-*.xml'))[:10]:
+              try:
+                  root = ET.parse(filename).getroot()
+                  for failure in root.findall('.//failure')[:2]:
+                      print(f"{filename}: {failure.attrib.get('message', '')}")
+                      print((failure.text or '')[:3000])
+              except Exception as exc:
+                  print(f"Could not parse {filename}: {exc}")
+          PY
+
+      - name: Preserve failed Protocol smoke-test reports
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: protocol-vendor-smoke-failure-${{ github.sha }}
+          path: |
+            bedrock-codec/build/test-results/test/*.xml
+            bedrock-connection/build/test-results/test/*.xml
+          if-no-files-found: warn
+          retention-days: 3
+
       - name: Archive candidates for technical review
         uses: actions/upload-artifact@v7
         with:
