@@ -135,8 +135,7 @@ jobs:
           set -euo pipefail
           test -n "$ORG_GRADLE_PROJECT_mavenCentralUsername"
           test -n "$ORG_GRADLE_PROJECT_mavenCentralPassword"
-          ./gradlew :bedrock-codec:publishToMavenCentral :bedrock-connection:publishToMavenCentral \
-            -PcentralRelease=true --no-daemon
+          ./gradlew publishToMavenCentral -PcentralRelease=true --no-daemon
 
       - name: Manual release approval required
         run: |
