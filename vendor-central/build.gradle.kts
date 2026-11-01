@@ -64,8 +64,16 @@ subprojects {
 
     tasks.withType<JavaCompile>().configureEach {
         options.encoding = "UTF-8"
-        // Source projects target Java 8, but modern JDK 21 is used in CI.
-        options.release.set(8)
+        if (project.name == "nukkit-natives-java") {
+            // The original 1.0.3 Java API includes Java 11 ByteBuffer
+            // compression and JDK-internal DirectBuffer/Unsafe types.
+            // Do not compile it with --release 8.
+            options.compilerArgs.addAll(listOf(
+                "--add-exports", "java.base/sun.nio.ch=ALL-UNNAMED"
+            ))
+        } else {
+            options.release.set(8)
+        }
     }
 
     tasks.withType<Javadoc>().configureEach {
