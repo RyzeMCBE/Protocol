@@ -40,6 +40,11 @@ subprojects {
     }
 
     repositories {
+        // CI-only smoke test of locally built, pinned original-source libraries.
+        // Normal and real Central builds never depend on mavenLocal().
+        if (providers.gradleProperty("localVendorSmoke").map(String::toBoolean).getOrElse(false)) {
+            mavenLocal()
+        }
         mavenCentral()
         maven("https://repo.opencollab.dev/maven-releases/")
         maven("https://repo.opencollab.dev/maven-snapshots/")
