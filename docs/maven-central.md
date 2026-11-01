@@ -17,8 +17,11 @@ namespace `io.github.ryzemcbe` es **opt-in**, mediante
 
 Tras el trabajo de los PR #8, #9 y #10, las dependencias originales están
 compiladas y firmadas desde revisiones fijadas, conservando paquetes Java y
-atribución de los autores originales. El propietario confirmó en Sonatype
-la publicación de estas coordenadas:
+atribución de los autores originales. El propietario confirmó en Sonatype el envío/publicación de estas
+coordenadas. **La disponibilidad pública todavía debe comprobarse**:
+el CI del 1 de noviembre de 2026 recibió HTTP 404 desde
+`repo.maven.apache.org` para Math Immutable, Natives y RakNet.
+El estado de Sonatype no sustituye esta comprobación:
 
 | Módulo | Versión |
 |---|---|
@@ -60,14 +63,21 @@ python3 .github/scripts/audit-central-resolution.py \
 En modo `centralRelease`, Gradle usa **solo** `mavenCentral()` como
 repositorio de dependencias. `mavenLocal()` se permite únicamente cuando
 se solicita expresamente `-PlocalVendorSmoke=true` para pruebas locales.
-El CI verifica las coordenadas y POM y compila ambos módulos con sus
-dependencias reales desde Central; NO publica en Sonatype.
+El CI normal verifica los POMs, dejando temporalmente permitidas
+exactamente las tres coordenadas vendor que siguen en propagación.
+Esto permite integrar el código en `main` sin aprobar una publicación.
+
+**La verificación de firma manual es la puerta estricta de publicación:**
+`.github/workflows/verify-maven-central-signing.yml` debe compilar
+ambos módulos con `-PcentralRelease=true` usando **solo Maven Central**.
+No contiene excepciones de repositorios ni permite publicación automática.
+Hasta superar esa verificación, no publicar Protocol.
 
 `bedrock-connection` debe depender de la versión correspondiente de
-`io.github.ryzemcbe:bedrock-codec`. El auditor del POM permite esta única
-dependencia de primer nivel todavía no publicada, para no forzar un
-bootstrap circular; la prueba de consumo externo completa se repetirá una
-vez publicados ambos módulos.
+`io.github.ryzemcbe:bedrock-codec`. El auditor de integración permite el `bedrock-codec` aún no publicado
+y, mientras se propagan, las tres dependencias vendor mencionadas.
+La auditoría estricta y la prueba consumidora independiente deben pasar
+antes de publicar ambos módulos.
 
 ## Firma y publicación (separada de este PR)
 
