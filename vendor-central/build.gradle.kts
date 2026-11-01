@@ -122,7 +122,11 @@ subprojects {
 
     configure<MavenPublishBaseExtension> {
         publishToMavenCentral()
-        signAllPublications()
+        // Local Maven consumer tests must not require production credentials.
+        // Official Central releases MUST pass -PvendorCentralRelease=true.
+        if (providers.gradleProperty("vendorCentralRelease").map(String::toBoolean).getOrElse(false)) {
+            signAllPublications()
+        }
         coordinates(project.group.toString(), project.name, project.version.toString())
 
         pom {
