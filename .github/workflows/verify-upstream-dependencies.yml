@@ -80,7 +80,7 @@ jobs:
               # No JNI binaries are generated here: Natives 1.0.3 has pure-Java
               # fallback implementations for Zlib, SHA256 and AES; smoke tests
               # are required before publishing a Java-only variant.
-              mvn --batch-mode --no-transfer-progress -Dantrun.skip=true -DskipTests package
+              mvn --batch-mode --no-transfer-progress -Dmaven.antrun.skip=true -DskipTests package
               ;;
             raknet)
               # Historical resolver 0.4 is incompatible with Gradle 9 on runner.
