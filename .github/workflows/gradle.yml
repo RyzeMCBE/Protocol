@@ -68,6 +68,27 @@ jobs:
           echo "::notice::Integración aprobable; Maven Central todavía no propagó los 3 POMs de vendor."
           echo "::notice::Antes de publicar ejecutar verify-maven-central-signing.yml (valida Maven Central sin OpenCollab)."
 
+      - name: Reportar estado público en Maven Central de cuatro vendor y dos Protocol
+        shell: bash
+        run: |
+          set -euo pipefail
+          for module in \
+            'cloudburst-math-api:2.0.0-ryze.1' \
+            'cloudburst-math-immutable:2.0.0-ryze.1' \
+            'nukkit-natives-java:1.0.3-ryze.1' \
+            'cloudburst-raknet:1.0.0.CR3-ryze.1' \
+            'bedrock-codec:1.26.60-R1' \
+            'bedrock-connection:1.26.60-R1'; do
+            name="${module%%:*}"
+            version="${module#*:}"
+            for ext in pom jar; do
+              url="https://repo.maven.apache.org/maven2/io/github/ryzemcbe/$name/$version/$name-$version.$ext"
+              status="$(curl --silent --show-error --location --max-time 25 --output /dev/null --write-out '%{http_code}' "$url")"
+              echo "::notice::MAVEN_CENTRAL $module $ext HTTP $status"
+            done
+          done
+          echo 'This informational check does not certify recursive transitive resolution or trigger a release.'
+
       - name: Guardar JAR de bedrock-codec y bedrock-connection
         if: success()
         uses: actions/upload-artifact@v7
