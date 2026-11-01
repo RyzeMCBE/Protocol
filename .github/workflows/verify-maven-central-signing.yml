@@ -1,0 +1,71 @@
+name: Maven Central - Verify Protocol GPG signatures (NO PUBLISH)
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: protocol-central-signing
+  cancel-in-progress: false
+
+jobs:
+  sign:
+    name: Verify signed Protocol artifacts (without publishing)
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment: maven-central
+
+    steps:
+      - name: Checkout reviewed main
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Install Java 21
+        uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v6
+
+      - name: Check signing secrets
+        shell: bash
+        env:
+          PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+          PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+        run: |
+          test -n "$PRIVATE_KEY" || { echo "::error::GPG_PRIVATE_KEY is missing"; exit 1; }
+          test -n "$PASSPHRASE" || { echo "::error::GPG_PASSPHRASE is missing"; exit 1; }
+
+      - name: Compile and sign Protocol Maven publications
+        shell: bash
+        env:
+          ORG_GRADLE_PROJECT_signingInMemoryKey: ${{ secrets.GPG_PRIVATE_KEY }}
+          ORG_GRADLE_PROJECT_signingInMemoryKeyPassword: ${{ secrets.GPG_PASSPHRASE }}
+        run: |
+          set -euo pipefail
+          chmod +x ./gradlew
+          ./gradlew clean build \
+            :bedrock-codec:generatePomFileForMavenPublication \
+            :bedrock-connection:generatePomFileForMavenPublication \
+            :bedrock-codec:signMavenPublication \
+            :bedrock-connection:signMavenPublication \
+            -PcentralRelease=true --no-daemon
+          python3 .github/scripts/verify-central-poms.py
+
+      - name: Verify signature files exist
+        shell: bash
+        run: |
+          set -euo pipefail
+          for module in bedrock-codec bedrock-connection; do
+            count=$(find "$module/build" -name '*.asc' -type f | wc -l)
+            test "$count" -ge 2 || { echo "::error::Missing $module signatures ($count)"; exit 1; }
+            echo "$module: $count detached GPG signatures generated"
+          done
+          echo 'NO Maven Central publication executed.'
+          echo 'IMPORTANT: This test does not certify third-party dependency availability.'
