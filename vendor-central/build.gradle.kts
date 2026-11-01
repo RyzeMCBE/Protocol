@@ -48,6 +48,12 @@ subprojects {
                 add(rootSources.resolve("target/generated-sources"))
             }
         })
+        // The math immutable source has ServiceLoader registrations for
+        // VectorProvider and ImaginaryProvider in META-INF/services.
+        // Without them Protocol initializes codec packets with NoClassDefFoundError.
+        if (project.name == "cloudburst-math-immutable") {
+            resources.srcDir(rootSources.resolve("src/main/resources"))
+        }
     }
 
     repositories {
