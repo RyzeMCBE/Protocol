@@ -113,6 +113,10 @@ jobs:
           chmod +x ./gradlew
           mkdir -p vendor-central/cloudburst-math-api vendor-central/cloudburst-math-immutable vendor-central/nukkit-natives-java vendor-central/cloudburst-raknet
           ./gradlew -p vendor-central clean build \
+            :cloudburst-math-api:signMavenPublication \
+            :cloudburst-math-immutable:signMavenPublication \
+            :nukkit-natives-java:signMavenPublication \
+            :cloudburst-raknet:signMavenPublication \
             -PvendorCentralRelease=true --no-daemon
 
       - name: Verify signed sources, Javadoc, libraries and original licenses
@@ -123,7 +127,11 @@ jobs:
             folder="vendor-central/$module/build/libs"
             test -n "$(find "$folder" -maxdepth 1 -name '*sources.jar' -print -quit)"
             test -n "$(find "$folder" -maxdepth 1 -name '*javadoc.jar' -print -quit)"
-            test -n "$(find "vendor-central/$module/build" -type f -name '*.asc' -print -quit)"
+            signatures=$(find "vendor-central/$module/build" -type f -name '*.asc' | wc -l)
+            if [[ "$signatures" -lt 3 ]]; then
+              echo "::error::$module: expected signed POM/JAR/sources/Javadoc; found $signatures signature files"
+              exit 1
+            fi
             pom="vendor-central/$module/build/publications/maven/pom-default.xml"
             test -s "$pom"
             grep -q '<groupId>io.github.ryzemcbe</groupId>' "$pom"
