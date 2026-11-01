@@ -1,0 +1,144 @@
+name: Maven Central - Upload Protocol codec and connection (manual, signed)
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirmation:
+        description: 'Type ENVIAR-PROTOCOL to upload signed codec and connection modules'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: protocol-final-central-publication
+  cancel-in-progress: false
+
+jobs:
+  upload:
+    if: github.ref == 'refs/heads/main' && inputs.confirmation == 'ENVIAR-PROTOCOL'
+    environment: maven-central
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    steps:
+      - name: Checkout reviewed Protocol main
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Verify original RyzeMCBE GPG key and passphrase, no secrets in logs
+        shell: bash
+        env:
+          PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+          PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+        run: |
+          set -euo pipefail
+          expected='0DE435F45DAAE3CCB759E01B32F428403DE9E4D8'
+          test -n "$PRIVATE_KEY" && test -n "$PASSPHRASE" || {
+            echo '::error::Missing original GPG key or passphrase'; exit 1;
+          }
+          [[ "$PRIVATE_KEY" == *'-----BEGIN PGP PRIVATE KEY BLOCK-----'* &&
+             "$PRIVATE_KEY" == *'-----END PGP PRIVATE KEY BLOCK-----'* ]] || {
+            echo '::error::GPG_PRIVATE_KEY must contain complete ASCII-armored secret key'; exit 1;
+          }
+          export GNUPGHOME="$(mktemp -d)"
+          chmod 700 "$GNUPGHOME"
+          trap 'rm -rf "$GNUPGHOME"' EXIT
+          printf '%s\n' "$PRIVATE_KEY" | gpg --batch --quiet --import >/dev/null 2>&1 || exit 1
+          gpg --batch --with-colons --list-secret-keys "$expected" |
+            awk -F: -v expected="$expected" '$1=="fpr" && $10==expected {ok=1} END{exit !ok}' || {
+              echo '::error::Unrecognized GPG fingerprint'; exit 1;
+            }
+          printf 'RyzeMCBE Protocol signature check\n' |
+            gpg --batch --quiet --yes --pinentry-mode loopback --passphrase-fd 3 --local-user "$expected" --detach-sign --output /dev/null 3<<<"$PASSPHRASE"
+          echo 'PASS: original GPG fingerprint and signature verified'
+
+      - name: Verify four vendor libraries have PUBLIC POMs and JARs
+        shell: bash
+        run: |
+          set -euo pipefail
+          for module in \
+            'cloudburst-math-api:2.0.0-ryze.1' \
+            'cloudburst-math-immutable:2.0.0-ryze.1' \
+            'nukkit-natives-java:1.0.3-ryze.1' \
+            'cloudburst-raknet:1.0.0.CR3-ryze.1'; do
+            artifact="${module%%:*}"
+            version="${module#*:}"
+            for ext in pom jar; do
+              url="https://repo.maven.apache.org/maven2/io/github/ryzemcbe/$artifact/$version/$artifact-$version.$ext"
+              result="$(curl --silent --show-error --location --max-time 25 --output /dev/null --write-out '%{http_code}' "$url")"
+              if [[ "$result" != 200 ]]; then
+                echo "::error::Missing public Central $module ($ext HTTP $result)"; exit 1
+              fi
+            done
+            echo "PASS public vendor $module"
+          done
+
+      - name: Verify Protocol release version is not already published
+        shell: bash
+        run: |
+          set -euo pipefail
+          for module in bedrock-codec bedrock-connection; do
+            url="https://repo.maven.apache.org/maven2/io/github/ryzemcbe/$module/1.26.60-R1/$module-1.26.60-R1.pom"
+            result="$(curl --silent --show-error --location --max-time 25 --output /dev/null --write-out '%{http_code}' "$url")"
+            [[ "$result" == 404 ]] || {
+              echo "::error::Cannot upload immutable $module: expected HTTP404, got HTTP$result"; exit 1;
+            }
+          done
+
+      - name: Setup Java and Gradle
+        uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v6
+
+      - name: Build and GPG sign both libraries
+        shell: bash
+        env:
+          ORG_GRADLE_PROJECT_signingInMemoryKey: ${{ secrets.GPG_PRIVATE_KEY }}
+          ORG_GRADLE_PROJECT_signingInMemoryKeyPassword: ${{ secrets.GPG_PASSPHRASE }}
+        run: |
+          set -euo pipefail
+          chmod +x gradlew
+          ./gradlew clean build \
+            :bedrock-codec:generatePomFileForMavenPublication \
+            :bedrock-connection:generatePomFileForMavenPublication \
+            :bedrock-codec:signMavenPublication \
+            :bedrock-connection:signMavenPublication \
+            -PcentralRelease=true --no-daemon
+          python3 .github/scripts/verify-central-poms.py
+          python3 .github/scripts/audit-central-resolution.py \
+            --pending io.github.ryzemcbe:bedrock-codec:1.26.60-R1 \
+            bedrock-codec/build/publications/maven/pom-default.xml \
+            bedrock-connection/build/publications/maven/pom-default.xml
+          for module in bedrock-codec bedrock-connection; do
+            test -s "$module/build/publications/maven/pom-default.xml"
+            test -n "$(find "$module/build/libs" -maxdepth 1 -name '*sources.jar' -print -quit)"
+            test -n "$(find "$module/build/libs" -maxdepth 1 -name '*javadoc.jar' -print -quit)"
+            count="$(find "$module/build" -name '*.asc' -type f | wc -l)"
+            test "$count" -ge 4 || {
+              echo "::error::$module expected 4 signed artifacts, found $count"; exit 1;
+            }
+          done
+
+      - name: Upload to Sonatype as USER_MANAGED (not public yet)
+        shell: bash
+        env:
+          ORG_GRADLE_PROJECT_signingInMemoryKey: ${{ secrets.GPG_PRIVATE_KEY }}
+          ORG_GRADLE_PROJECT_signingInMemoryKeyPassword: ${{ secrets.GPG_PASSPHRASE }}
+          ORG_GRADLE_PROJECT_mavenCentralUsername: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
+          ORG_GRADLE_PROJECT_mavenCentralPassword: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
+        run: |
+          set -euo pipefail
+          test -n "$ORG_GRADLE_PROJECT_mavenCentralUsername"
+          test -n "$ORG_GRADLE_PROJECT_mavenCentralPassword"
+          ./gradlew :bedrock-codec:publishToMavenCentral :bedrock-connection:publishToMavenCentral \
+            -PcentralRelease=true --no-daemon
+
+      - name: Manual release approval required
+        run: |
+          echo 'Protocol upload complete, PUBLICATION NOT AUTOMATIC.'
+          echo 'Open https://central.sonatype.com/publishing/deployments and manually Publish after validation.'
