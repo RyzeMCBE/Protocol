@@ -1,0 +1,152 @@
+name: Maven Central - Upload Protocol original-source dependencies
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirmation:
+        description: 'Type ENVIAR-PROTOCOL-DEPS to send the four signed vendor modules'
+        type: string
+        required: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: protocol-original-deps-central-publish
+  cancel-in-progress: false
+
+jobs:
+  upload:
+    if: github.ref == 'refs/heads/main' && inputs.confirmation == 'ENVIAR-PROTOCOL-DEPS'
+    name: Signed original-source libraries - manual Sonatype validation
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    environment: maven-central
+
+    steps:
+      - name: Checkout reviewed Protocol main
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Check out pinned original Math source
+        uses: actions/checkout@v7
+        with:
+          repository: CloudburstMC/math
+          ref: 87f24259a74a5ed690251fcc940b97f3fb540e47
+          path: vendor-upstream/math
+          persist-credentials: false
+
+      - name: Check out pinned original Natives source
+        uses: actions/checkout@v7
+        with:
+          repository: CloudburstMC/Natives
+          ref: 41826fe18358f7358707dc55e698abc16cdcc49a
+          path: vendor-upstream/natives
+          persist-credentials: false
+
+      - name: Check out pinned original RakNet source
+        uses: actions/checkout@v7
+        with:
+          repository: CloudburstMC/Network
+          ref: 78a3224e829f2c4bcfe5a298320477d2f46ce6fa
+          path: vendor-upstream/raknet
+          persist-credentials: false
+
+      - name: Verify all original source revisions and licenses
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git -C vendor-upstream/math rev-parse HEAD)" = 87f24259a74a5ed690251fcc940b97f3fb540e47
+          test "$(git -C vendor-upstream/natives rev-parse HEAD)" = 41826fe18358f7358707dc55e698abc16cdcc49a
+          test "$(git -C vendor-upstream/raknet rev-parse HEAD)" = 78a3224e829f2c4bcfe5a298320477d2f46ce6fa
+          test -s vendor-upstream/math/LICENSE.txt
+          test -s vendor-upstream/natives/LICENSE
+          test -s vendor-upstream/raknet/LICENSE
+
+      - name: Install Java 21
+        uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v6
+
+      - name: Check release coordinates are not already published
+        shell: bash
+        run: |
+          set -euo pipefail
+          for module in 'cloudburst-math-api:2.0.0-ryze.1' 'cloudburst-math-immutable:2.0.0-ryze.1' 'nukkit-natives-java:1.0.3-ryze.1' 'cloudburst-raknet:1.0.0.CR3-ryze.1'; do
+            artifact="${module%%:*}"
+            version="${module#*:}"
+            url="https://repo.maven.apache.org/maven2/io/github/ryzemcbe/$artifact/$version/$artifact-$version.pom"
+            status=$(curl --silent --show-error --location --max-time 25 --output /dev/null --write-out '%{http_code}' "$url")
+            if [[ "$status" == '200' ]]; then
+              echo "::error::$artifact:$version already exists on Maven Central. Releases are immutable."
+              exit 1
+            fi
+            if [[ "$status" != '404' ]]; then
+              echo "::error::Unable to safely verify Central availability: HTTP $status for $artifact"
+              exit 1
+            fi
+            echo "$artifact:$version not yet published"
+          done
+
+      - name: Generate the original Cloudburst Math Java sources
+        shell: bash
+        working-directory: vendor-upstream/math
+        run: |
+          set -euo pipefail
+          sed -i 's/<version>3.3.0-SNAPSHOT<\/version>/<version>3.3.0<\/version>/' immutable/pom.xml
+          mvn --batch-mode --no-transfer-progress -pl immutable -am -DskipTests package
+
+      - name: Compile four modules and produce signed Maven distributions
+        shell: bash
+        env:
+          ORG_GRADLE_PROJECT_signingInMemoryKey: ${{ secrets.GPG_PRIVATE_KEY }}
+          ORG_GRADLE_PROJECT_signingInMemoryKeyPassword: ${{ secrets.GPG_PASSPHRASE }}
+        run: |
+          set -euo pipefail
+          test -n "$ORG_GRADLE_PROJECT_signingInMemoryKey"
+          test -n "$ORG_GRADLE_PROJECT_signingInMemoryKeyPassword"
+          chmod +x ./gradlew
+          mkdir -p vendor-central/cloudburst-math-api vendor-central/cloudburst-math-immutable vendor-central/nukkit-natives-java vendor-central/cloudburst-raknet
+          ./gradlew -p vendor-central clean build \
+            -PvendorCentralRelease=true --no-daemon
+
+      - name: Verify signed sources, Javadoc, libraries and original licenses
+        shell: bash
+        run: |
+          set -euo pipefail
+          for module in cloudburst-math-api cloudburst-math-immutable nukkit-natives-java cloudburst-raknet; do
+            folder="vendor-central/$module/build/libs"
+            test -n "$(find "$folder" -maxdepth 1 -name '*sources.jar' -print -quit)"
+            test -n "$(find "$folder" -maxdepth 1 -name '*javadoc.jar' -print -quit)"
+            test -n "$(find "vendor-central/$module/build" -type f -name '*.asc' -print -quit)"
+            pom="vendor-central/$module/build/publications/maven/pom-default.xml"
+            test -s "$pom"
+            grep -q '<groupId>io.github.ryzemcbe</groupId>' "$pom"
+            grep -q '<licenses>' "$pom"
+          done
+
+      - name: Upload signed original-source bundles to Sonatype (manual release)
+        shell: bash
+        env:
+          ORG_GRADLE_PROJECT_signingInMemoryKey: ${{ secrets.GPG_PRIVATE_KEY }}
+          ORG_GRADLE_PROJECT_signingInMemoryKeyPassword: ${{ secrets.GPG_PASSPHRASE }}
+          ORG_GRADLE_PROJECT_mavenCentralUsername: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
+          ORG_GRADLE_PROJECT_mavenCentralPassword: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
+        run: |
+          set -euo pipefail
+          test -n "$ORG_GRADLE_PROJECT_signingInMemoryKey"
+          test -n "$ORG_GRADLE_PROJECT_signingInMemoryKeyPassword"
+          test -n "$ORG_GRADLE_PROJECT_mavenCentralUsername"
+          test -n "$ORG_GRADLE_PROJECT_mavenCentralPassword"
+          ./gradlew -p vendor-central publishToMavenCentral \
+            -PvendorCentralRelease=true --no-daemon
+
+      - name: Review and publish manually in Sonatype
+        run: |
+          echo "Four modules uploaded for review. NO automatic public release."
+          echo "Check https://central.sonatype.com/publishing/deployments and manually Publish only if VALIDATED."
