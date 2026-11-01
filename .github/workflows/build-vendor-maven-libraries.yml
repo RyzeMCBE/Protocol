@@ -84,7 +84,7 @@ jobs:
           set -euo pipefail
           chmod +x ./gradlew
           mkdir -p vendor-central/cloudburst-math-api vendor-central/cloudburst-math-immutable vendor-central/nukkit-natives-java vendor-central/cloudburst-raknet
-          ./gradlew -p vendor-central clean build publishToMavenLocal --no-daemon
+          ./gradlew -p vendor-central clean build publishToMavenLocal -x signMavenPublication --no-daemon
 
       - name: Verify independent artifacts and Maven POMs
         shell: bash
