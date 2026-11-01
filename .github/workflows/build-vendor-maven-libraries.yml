@@ -1,0 +1,116 @@
+name: Protocol - Build RyzeMCBE vendored Maven libraries (NO PUBLISH)
+
+on:
+  pull_request:
+    paths:
+      - 'vendor-central/**'
+      - '.github/workflows/build-vendor-maven-libraries.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: protocol-vendor-pom-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-vendor:
+    name: Build original-source Maven modules locally (no remote upload)
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+
+    steps:
+      - name: Checkout Protocol candidate
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Fetch original Cloudburst Math sources
+        uses: actions/checkout@v7
+        with:
+          repository: CloudburstMC/math
+          ref: 87f24259a74a5ed690251fcc940b97f3fb540e47
+          path: vendor-upstream/math
+          persist-credentials: false
+
+      - name: Fetch original Nukkit Natives sources
+        uses: actions/checkout@v7
+        with:
+          repository: CloudburstMC/Natives
+          ref: 41826fe18358f7358707dc55e698abc16cdcc49a
+          path: vendor-upstream/natives
+          persist-credentials: false
+
+      - name: Fetch original Cloudburst Network RakNet sources
+        uses: actions/checkout@v7
+        with:
+          repository: CloudburstMC/Network
+          ref: 78a3224e829f2c4bcfe5a298320477d2f46ce6fa
+          path: vendor-upstream/raknet
+          persist-credentials: false
+
+      - name: Verify original source commits and licenses
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git -C vendor-upstream/math rev-parse HEAD)" = "87f24259a74a5ed690251fcc940b97f3fb540e47"
+          test "$(git -C vendor-upstream/natives rev-parse HEAD)" = "41826fe18358f7358707dc55e698abc16cdcc49a"
+          test "$(git -C vendor-upstream/raknet rev-parse HEAD)" = "78a3224e829f2c4bcfe5a298320477d2f46ce6fa"
+          test -s vendor-upstream/math/LICENSE.txt
+          test -s vendor-upstream/natives/LICENSE
+          test -s vendor-upstream/raknet/LICENSE
+
+      - name: Set up Java 21
+        uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v6
+
+      - name: Generate original Math Java template sources
+        working-directory: vendor-upstream/math
+        shell: bash
+        run: |
+          set -euo pipefail
+          sed -i 's/<version>3.3.0-SNAPSHOT<\/version>/<version>3.3.0<\/version>/' immutable/pom.xml
+          mvn --batch-mode --no-transfer-progress -pl immutable -am -DskipTests package
+
+      - name: Build distributable RyzeMCBE-source JARs + POM and test locally
+        shell: bash
+        run: |
+          set -euo pipefail
+          chmod +x ./gradlew
+          mkdir -p vendor-central/cloudburst-math-api vendor-central/cloudburst-math-immutable vendor-central/nukkit-natives-java vendor-central/cloudburst-raknet
+          ./gradlew -p vendor-central clean build publishToMavenLocal --no-daemon
+
+      - name: Verify independent artifacts and Maven POMs
+        shell: bash
+        run: |
+          set -euo pipefail
+          for x in cloudburst-math-api cloudburst-math-immutable nukkit-natives-java cloudburst-raknet; do
+            find "vendor-central/$x/build/libs" -maxdepth 1 -name '*.jar' -print
+            test "$(find "vendor-central/$x/build/libs" -maxdepth 1 -name '*.jar' | wc -l)" -ge 3
+            pom="vendor-central/$x/build/publications/maven/pom-default.xml"
+            test -s "$pom"
+            grep -q '<groupId>io.github.ryzemcbe</groupId>' "$pom"
+            grep -q '<licenses>' "$pom"
+            test -n "$(find "vendor-central/$x/build/libs" -maxdepth 1 -name '*sources.jar' -print -quit)"
+            test -n "$(find "vendor-central/$x/build/libs" -maxdepth 1 -name '*javadoc.jar' -print -quit)"
+          done
+          grep -q '<artifactId>cloudburst-math-api</artifactId>' vendor-central/cloudburst-math-immutable/build/publications/maven/pom-default.xml
+          jar tf vendor-central/cloudburst-math-immutable/build/libs/cloudburst-math-immutable-2.0.0-ryze.1.jar | grep -q '^META-INF/services/org.cloudburstmc.math.vector.VectorProvider$'
+          jar tf vendor-central/cloudburst-math-immutable/build/libs/cloudburst-math-immutable-2.0.0-ryze.1.jar | grep -q '^META-INF/services/org.cloudburstmc.math.imaginary.ImaginaryProvider$'
+          echo "PASS: four artifacts prepared locally, NO Sonatype deployment."
+
+      - name: Archive candidates for technical review
+        uses: actions/upload-artifact@v7
+        with:
+          name: protocol-vendor-candidates-${{ github.sha }}
+          path: |
+            vendor-central/**/build/libs/*.jar
+            vendor-central/**/build/publications/maven/pom-default.xml
+          retention-days: 3
+          if-no-files-found: error
