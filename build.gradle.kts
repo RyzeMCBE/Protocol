@@ -15,8 +15,14 @@ subprojects {
     apply(plugin = rootProject.libs.plugins.lombok.get().pluginId)
     apply(plugin = rootProject.libs.plugins.publish.get().pluginId)
 
-    group = "org.allaymc.protocol"
-    version = rootProject.version
+    // Keep existing development coordinates intact. A Central release is opt-in
+    // and publishes exclusively under the verified RyzeMCBE namespace.
+    val centralRelease = providers.gradleProperty("centralRelease")
+        .map(String::toBoolean).getOrElse(false)
+    group = if (centralRelease) "io.github.ryzemcbe" else "org.allaymc.protocol"
+    version = rootProject.version.toString().let {
+        if (centralRelease) it.removeSuffix("-SNAPSHOT") else it
+    }
 
     tasks {
         withType<JavaCompile>().configureEach {
@@ -34,9 +40,19 @@ subprojects {
     }
 
     repositories {
+        // CI-only smoke test of locally built, pinned original-source libraries.
+        // Normal and real Central builds never depend on mavenLocal().
+        if (providers.gradleProperty("localVendorSmoke").map(String::toBoolean).getOrElse(false)) {
+            mavenLocal()
+        }
         mavenCentral()
-        maven("https://repo.opencollab.dev/maven-releases/")
-        maven("https://repo.opencollab.dev/maven-snapshots/")
+        // A Central release must resolve ALL dependencies without OpenCollab,
+        // GitHub Packages, mavenLocal (unless explicitly testing local vendor
+        // builds), or any other repository not available to consumers.
+        if (!centralRelease) {
+            maven("https://repo.opencollab.dev/maven-releases/")
+            maven("https://repo.opencollab.dev/maven-snapshots/")
+        }
     }
 
     dependencies {

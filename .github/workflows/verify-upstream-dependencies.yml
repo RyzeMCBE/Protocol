@@ -1,0 +1,125 @@
+name: Protocol - Original dependency source builds (NO PUBLISH)
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/verify-upstream-dependencies.yml'
+      - 'docs/maven-central.md'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: protocol-thirdparty-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  upstream-source:
+    name: Compile original / ${{ matrix.target }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: math
+            repository: CloudburstMC/math
+            sha: 87f24259a74a5ed690251fcc940b97f3fb540e47
+            java: '11'
+          - target: natives-java
+            repository: CloudburstMC/Natives
+            sha: 41826fe18358f7358707dc55e698abc16cdcc49a
+            java: '11'
+          - target: raknet
+            repository: CloudburstMC/Network
+            sha: 78a3224e829f2c4bcfe5a298320477d2f46ce6fa
+            java: '21'
+
+    steps:
+      - name: Check out original pinned source
+        uses: actions/checkout@v7
+        with:
+          repository: ${{ matrix.repository }}
+          ref: ${{ matrix.sha }}
+          submodules: recursive
+          path: upstream
+          persist-credentials: false
+
+      - name: Verify pinned revision
+        shell: bash
+        env:
+          EXPECTED_SHA: ${{ matrix.sha }}
+        run: |
+          set -euo pipefail
+          test "$(git -C upstream rev-parse HEAD)" = "$EXPECTED_SHA"
+          test -f upstream/LICENSE -o -f upstream/LICENSE.txt
+          echo "Verified immutable upstream commit: $EXPECTED_SHA"
+
+      - name: Set up Java
+        uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: ${{ matrix.java }}
+
+      - name: Compile without publication
+        shell: bash
+        working-directory: upstream
+        env:
+          TARGET: ${{ matrix.target }}
+        run: |
+          set -euo pipefail
+          case "$TARGET" in
+            math)
+              # Original shade plugin SNAPSHOT was removed from upstream repositories.
+              sed -i 's/<version>3.3.0-SNAPSHOT<\/version>/<version>3.3.0<\/version>/' immutable/pom.xml
+              mvn --batch-mode --no-transfer-progress -pl immutable -am -DskipTests package
+              ;;
+            natives-java)
+              # The historical Linux Maven profile runs make but ships no Makefile.
+              # No JNI binaries are generated here: Natives 1.0.3 has pure-Java
+              # fallback implementations for Zlib, SHA256 and AES; smoke tests
+              # are required before publishing a Java-only variant.
+              mvn --batch-mode --no-transfer-progress -Dmaven.antrun.skip=true -DskipTests package
+              ;;
+            raknet)
+              # Historical resolver 0.4 is incompatible with Gradle 9 on runner.
+              sed -i 's/foojay-resolver-convention") version "0.4.0"/foojay-resolver-convention") version "1.0.0"/' settings.gradle.kts
+              chmod +x ./gradlew
+              ./gradlew :transport-raknet:assemble --no-daemon
+              ;;
+          esac
+
+      - name: Verify expected Java class contents
+        shell: bash
+        env:
+          TARGET: ${{ matrix.target }}
+        working-directory: upstream
+        run: |
+          set -euo pipefail
+          case "$TARGET" in
+            math)
+              test -f api/target/api-2.0-SNAPSHOT.jar
+              test -f immutable/target/immutable-2.0-SNAPSHOT.jar
+              jar tf immutable/target/immutable-2.0-SNAPSHOT.jar | grep -q '^org/cloudburstmc/math/'
+              ;;
+            natives-java)
+              test -f target/natives-1.0.3.jar
+              jar tf target/natives-1.0.3.jar | grep -q '^com/nukkitx/natives/util/Natives.class$'
+              jar tf target/natives-1.0.3.jar | grep -q '^com/nukkitx/natives/zlib/Zlib.class$'
+              ;;
+            raknet)
+              find transport-raknet/build/libs -maxdepth 1 -name '*.jar' -type f -print
+              jar tf "$(find transport-raknet/build/libs -name '*.jar' ! -name '*sources*' ! -name '*javadoc*' | head -1)" | grep -q '^org/cloudburstmc/netty/channel/raknet/RakDisconnectReason.class$'
+              ;;
+          esac
+
+      - name: Store candidate upstream JARs - not yet publishable
+        uses: actions/upload-artifact@v7
+        with:
+          name: protocol-upstream-${{ matrix.target }}-${{ github.sha }}
+          path: |
+            upstream/**/target/*.jar
+            upstream/**/build/libs/*.jar
+          retention-days: 3
+          if-no-files-found: error

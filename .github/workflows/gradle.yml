@@ -45,6 +45,26 @@ jobs:
           chmod +x ./gradlew
           ./gradlew build --no-daemon
 
+      - name: Validar coordenadas de publicación Central (sin subir artefactos)
+        run: |
+          ./gradlew \
+            :bedrock-codec:generatePomFileForMavenPublication \
+            :bedrock-connection:generatePomFileForMavenPublication \
+            -PcentralRelease=true --no-daemon
+          python3 .github/scripts/verify-central-poms.py
+          python3 .github/scripts/audit-central-resolution.py \
+            --pending io.github.ryzemcbe:bedrock-codec:1.26.60-R1 \
+            bedrock-codec/build/publications/maven/pom-default.xml \
+            bedrock-connection/build/publications/maven/pom-default.xml
+
+      - name: Compilar y probar publicación usando exclusivamente Maven Central
+        run: |
+          # No mavenLocal, OpenCollab, or other custom artifact repository.
+          # This proves the released vendor dependencies and their transitive graph
+          # are consumable by Gradle's standard Maven Central repository.
+          ./gradlew :bedrock-codec:build :bedrock-connection:build \
+            -PcentralRelease=true --refresh-dependencies --no-daemon
+
       - name: Guardar JAR de bedrock-codec y bedrock-connection
         if: success()
         uses: actions/upload-artifact@v7
