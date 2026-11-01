@@ -46,8 +46,13 @@ subprojects {
             mavenLocal()
         }
         mavenCentral()
-        maven("https://repo.opencollab.dev/maven-releases/")
-        maven("https://repo.opencollab.dev/maven-snapshots/")
+        // A Central release must resolve ALL dependencies without OpenCollab,
+        // GitHub Packages, mavenLocal (unless explicitly testing local vendor
+        // builds), or any other repository not available to consumers.
+        if (!centralRelease) {
+            maven("https://repo.opencollab.dev/maven-releases/")
+            maven("https://repo.opencollab.dev/maven-snapshots/")
+        }
     }
 
     dependencies {
