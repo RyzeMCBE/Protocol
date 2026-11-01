@@ -103,6 +103,18 @@ jobs:
           grep -q '<artifactId>cloudburst-math-api</artifactId>' vendor-central/cloudburst-math-immutable/build/publications/maven/pom-default.xml
           echo "PASS: four artifacts prepared locally, NO Sonatype deployment."
 
+      - name: Smoke test Protocol compiled against local source-built Maven libraries
+        shell: bash
+        run: |
+          set -euo pipefail
+          ./gradlew clean build \
+            :bedrock-codec:generatePomFileForMavenPublication \
+            :bedrock-connection:generatePomFileForMavenPublication \
+            -PcentralRelease=true -PlocalVendorSmoke=true --no-daemon
+          python3 .github/scripts/verify-central-poms.py
+          echo "Protocol compiles using RyzeMCBE-source dependencies."
+          echo "This local test does not mean any artifact is available on Maven Central."
+
       - name: Archive candidates for technical review
         uses: actions/upload-artifact@v7
         with:
