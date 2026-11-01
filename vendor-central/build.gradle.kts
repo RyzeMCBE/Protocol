@@ -58,8 +58,8 @@ subprojects {
         toolchain {
             languageVersion.set(JavaLanguageVersion.of(21))
         }
-        withSourcesJar()
-        withJavadocJar()
+        // Vanniktech creates the publishing source/Javadoc artifacts.
+        // Do not duplicate them with Java's withSourcesJar/withJavadocJar.
     }
 
     tasks.withType<JavaCompile>().configureEach {
