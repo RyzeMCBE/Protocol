@@ -3,7 +3,7 @@ import org.gradle.api.tasks.javadoc.Javadoc
 import org.gradle.external.javadoc.StandardJavadocDocletOptions
 
 plugins {
-    id("java-library") apply false
+    id("java-library")
     id("com.vanniktech.maven.publish") version "0.37.0" apply false
 }
 
@@ -44,7 +44,7 @@ subprojects {
     sourceSets.named("main") {
         java.setSrcDirs(buildList {
             add(rootSources.resolve("src/main/java"))
-            if (name.startsWith("cloudburst-math")) {
+            if (project.name.startsWith("cloudburst-math")) {
                 add(rootSources.resolve("target/generated-sources"))
             }
         })
