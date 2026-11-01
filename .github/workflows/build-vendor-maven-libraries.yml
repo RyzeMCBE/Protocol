@@ -101,32 +101,8 @@ jobs:
             test -n "$(find "vendor-central/$x/build/libs" -maxdepth 1 -name '*javadoc.jar' -print -quit)"
           done
           grep -q '<artifactId>cloudburst-math-api</artifactId>' vendor-central/cloudburst-math-immutable/build/publications/maven/pom-default.xml
-          jar tf vendor-central/cloudburst-math-immutable/build/libs/cloudburst-math-immutable-2.0.0-ryze.1.jar | grep -q '^META-INF/services/org.cloudburstmc.math.vector.VectorProvider
-          echo "PASS: four artifacts prepared locally, NO Sonatype deployment."
-
-      - name: Archive candidates for technical review
-        uses: actions/upload-artifact@v7
-        with:
-          name: protocol-vendor-candidates-${{ github.sha }}
-          path: |
-            vendor-central/**/build/libs/*.jar
-            vendor-central/**/build/publications/maven/pom-default.xml
-          retention-days: 3
-          if-no-files-found: error
-
-          jar tf vendor-central/cloudburst-math-immutable/build/libs/cloudburst-math-immutable-2.0.0-ryze.1.jar | grep -q '^META-INF/services/org.cloudburstmc.math.imaginary.ImaginaryProvider
-          echo "PASS: four artifacts prepared locally, NO Sonatype deployment."
-
-      - name: Archive candidates for technical review
-        uses: actions/upload-artifact@v7
-        with:
-          name: protocol-vendor-candidates-${{ github.sha }}
-          path: |
-            vendor-central/**/build/libs/*.jar
-            vendor-central/**/build/publications/maven/pom-default.xml
-          retention-days: 3
-          if-no-files-found: error
-
+          jar tf vendor-central/cloudburst-math-immutable/build/libs/cloudburst-math-immutable-2.0.0-ryze.1.jar | grep -q '^META-INF/services/org.cloudburstmc.math.vector.VectorProvider$'
+          jar tf vendor-central/cloudburst-math-immutable/build/libs/cloudburst-math-immutable-2.0.0-ryze.1.jar | grep -q '^META-INF/services/org.cloudburstmc.math.imaginary.ImaginaryProvider$'
           echo "PASS: four artifacts prepared locally, NO Sonatype deployment."
 
       - name: Archive candidates for technical review
